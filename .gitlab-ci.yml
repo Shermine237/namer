@@ -1,5 +1,4 @@
 image: shermine237/flutter-sdk:3.19.2
-options: --pull=if-not-present
 
 stages:
   - build
