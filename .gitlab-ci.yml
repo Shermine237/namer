@@ -1,0 +1,24 @@
+image: shermine237/flutter-sdk:3.19.2
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  script:
+    - flutter build apk
+
+  artifacts:
+    paths:
+      - "build/app/outputs/apk/release/app-release.apk"
+    expire_in: 1 day
+
+deploy:
+  image: google/cloud-sdk:468.0.0-debian_component_based
+  stage: deploy
+  script:
+    - apt-get update && apt-get install -y unzip
+    - gcloud auth activate-service-account --key-file=namer-417117-f2c015d03dba.json
+    - gcloud config set project namer-417117
+    - gcloud firebase app dist-tags 1:721328081234:android:3728d008eb247a2a4bd28b --version=1.0.$CI_PIPELINE_ID
