@@ -16,7 +16,6 @@ build:
 
 deploy:
   image: google/cloud-sdk:468.0.0-debian_component_based
-  options: --pull=if-not-present
   stage: deploy
   script:
     - apt-get update && apt-get install -y unzip
