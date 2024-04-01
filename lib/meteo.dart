@@ -4,14 +4,14 @@ import 'package:http/http.dart' as http;
 
 const apiKey = '3b8801a04a269716ee8c11e1f0b021e6';
 
-class Meteo extends StatefulWidget {
-  const Meteo({super.key});
+class MeteoPage extends StatefulWidget {
+  const MeteoPage({super.key});
 
   @override
   _WeatherPageState createState() => _WeatherPageState();
 }
 
-class _WeatherPageState extends State<Meteo> {
+class _WeatherPageState extends State<MeteoPage> {
   final _formKey = GlobalKey<FormState>();
 
   String _cityName = '';

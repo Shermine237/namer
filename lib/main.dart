@@ -5,9 +5,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 import 'login.dart';
-import 'weather.dart';
+import 'meteo.dart';
 import 'generator.dart';
 import 'favorite.dart';
+import 'folder.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,7 +66,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
+  var selectedIndex = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
         page = const FavoritesPage();
         break;
       case 3:
-        page = const Meteo();
+        page = const MeteoPage();
+        break;
+      case 4:
+        page = const FolderPage();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -111,6 +115,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     NavigationRailDestination(
                       icon: Icon(Icons.cloud),
                       label: Text('Meteo'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.folder),
+                      label: Text('Fichiers'),
                     ),
                   ],
                   selectedIndex: selectedIndex, 
