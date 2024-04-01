@@ -43,4 +43,6 @@ app.*.map.json
 /android/app/release
 
 android/app/google-services.json
-namer-417117-f2c015d03dba.json
+
+firebase.exe
+firebase-tools-instant-win.exe
