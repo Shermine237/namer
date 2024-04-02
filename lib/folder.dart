@@ -1,11 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:path/path.dart' as path;
-import 'package:file_picker/file_picker.dart'; // Import pour PickedFile
-import 'dart:io'; // Import pour la classe File
+import 'package:file_picker/file_picker.dart' as file_picker;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class FolderPage extends StatefulWidget {
-  const FolderPage({Key? key}) : super(key: key);
+  const FolderPage({super.key});
 
   @override
   _FolderPageState createState() => _FolderPageState();
@@ -39,15 +41,12 @@ class _FolderPageState extends State<FolderPage> {
 
   Future<void> _uploadFile() async {
     try {
-      final FilePickerResult? pickedFile =
-          await FilePicker.platform.pickFiles(type: FileType.any);
-      if (pickedFile != null) {
-        final File file = File(pickedFile.files.single.path!);
-        String filename = path.basename(file.path);
-        firebase_storage.Reference storageRef =
-            firebase_storage.FirebaseStorage.instance
-                .ref('Public/$filename');
-        await storageRef.putFile(file);
+      final filePickerResult = await file_picker.FilePicker.platform.pickFiles(type: file_picker.FileType.any);
+      if (filePickerResult != null) {
+        final fileBytes = filePickerResult.files.single.bytes;
+        final fileName = filePickerResult.files.single.name;
+        final firebase_storage.Reference storageRef = firebase_storage.FirebaseStorage.instance.ref('Public/$fileName');
+        await storageRef.putData(fileBytes!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fichier téléversé avec succès !')),
         );
@@ -66,48 +65,124 @@ class _FolderPageState extends State<FolderPage> {
     });
   }
 
-  void _deleteSelected() {
-    // Ajoutez ici la logique pour supprimer les fichiers sélectionnés
+  void _deleteSelected() async {
+    try {
+      List<firebase_storage.Reference> selectedFiles = _selectedItems
+          .asMap()
+          .entries
+          .where((entry) => entry.value)
+          .map((entry) => _files[entry.key])
+          .toList();
+
+      bool confirmDelete = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Confirmation'),
+            content: const Text('Voulez-vous vraiment supprimer les fichiers sélectionnés ?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false); // Annuler la suppression
+                },
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true); // Confirmer la suppression
+                },
+                child: const Text('Supprimer'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmDelete == true) {
+        for (var fileRef in selectedFiles) {
+          await fileRef.delete();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fichiers supprimés avec succès !')),
+        );
+
+        _listFiles();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec de la suppression des fichiers : $e')),
+      );
+    }
+  }
+
+  Future<void> _downloadSelected() async {
+    try {
+      List<firebase_storage.Reference> selectedFiles = _selectedItems
+          .asMap()
+          .entries
+          .where((entry) => entry.value)
+          .map((entry) => _files[entry.key])
+          .toList();
+
+      for (var fileRef in selectedFiles) {
+        final String downloadUrl = await fileRef.getDownloadURL();
+        final String fileName = path.basename(fileRef.fullPath);
+        final HttpClientRequest request = await HttpClient().getUrl(Uri.parse(downloadUrl));
+        final HttpClientResponse response = await request.close();
+        final List<int> bytes = await consolidateHttpClientResponseBytes(response);
+        final Directory appDocumentsDirectory = await getApplicationDocumentsDirectory();
+        final String filePath = path.join(appDocumentsDirectory.path, fileName);
+        final File file = File(filePath);
+        await file.writeAsBytes(bytes);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fichiers téléchargés avec succès !')),
+      );
+    } catch (e){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Échec du téléchargement des fichiers : $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dossier public'),
-        leading: IconButton(
-          onPressed: _deleteSelected,
-          icon: const Icon(Icons.delete),
-          tooltip: 'Supprimer les fichiers sélectionnés',
-        ),
+        title: const Text('Gestionnaire de fichiers'),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _files.length,
-              itemBuilder: (context, index) {
-                firebase_storage.Reference fileRef = _files[index];
-                String filename = path.basename(fileRef.fullPath);
-                bool isSelected = _selectedItems[index];
-                return ListTile(
-                  title: Text(filename),
-                  onTap: () => _toggleSelection(index),
-                  tileColor: isSelected ? Colors.blue.withOpacity(0.3) : null,
-                );
+      body: ListView.builder(
+        itemCount: _files.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            leading: Checkbox(
+              value: _selectedItems[index],
+              onChanged: (value) {
+                _toggleSelection(index);
               },
             ),
+            title: Text(path.basename(_files[index].fullPath)),
+          );
+        },
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: _uploadFile,
+            child: const Icon(Icons.upload),
           ),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _uploadFile(),
-              icon: const Icon(Icons.cloud_upload),
-              label: const Text('Téléverser un fichier'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(16.0),
-              ),
-            ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: _deleteSelected,
+            child: const Icon(Icons.delete),
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            onPressed: _downloadSelected,
+            child: const Icon(Icons.download),
           ),
         ],
       ),
