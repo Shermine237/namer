@@ -84,12 +84,12 @@ class _ToDoPageState extends State<ToDoPage> {
         }
       }).catchError((e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to remove task: $e")),
+          SnackBar(content: Text("Échec de la suppression de la tâche: $e")),
         );
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to remove task: $e")),
+        SnackBar(content: Text("Échec de la suppression de la tâche: $e")),
       );
     }
   }
