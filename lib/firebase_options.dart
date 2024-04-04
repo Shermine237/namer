@@ -49,6 +49,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '991260882274',
     projectId: 'atelier3-a059c',
     authDomain: 'atelier3-a059c.firebaseapp.com',
+    databaseURL: 'https://atelier3-a059c-default-rtdb.firebaseio.com',
     storageBucket: 'atelier3-a059c.appspot.com',
   );
 
@@ -57,6 +58,7 @@ class DefaultFirebaseOptions {
     appId: '1:991260882274:android:97b3ee6e61e6676001683b',
     messagingSenderId: '991260882274',
     projectId: 'atelier3-a059c',
+    databaseURL: 'https://atelier3-a059c-default-rtdb.firebaseio.com',
     storageBucket: 'atelier3-a059c.appspot.com',
   );
 
@@ -65,6 +67,7 @@ class DefaultFirebaseOptions {
     appId: '1:991260882274:ios:5515992622a170a201683b',
     messagingSenderId: '991260882274',
     projectId: 'atelier3-a059c',
+    databaseURL: 'https://atelier3-a059c-default-rtdb.firebaseio.com',
     storageBucket: 'atelier3-a059c.appspot.com',
     iosBundleId: 'com.example.namer',
   );
@@ -74,6 +77,7 @@ class DefaultFirebaseOptions {
     appId: '1:991260882274:ios:d179eb8ce2da095801683b',
     messagingSenderId: '991260882274',
     projectId: 'atelier3-a059c',
+    databaseURL: 'https://atelier3-a059c-default-rtdb.firebaseio.com',
     storageBucket: 'atelier3-a059c.appspot.com',
     iosBundleId: 'com.example.namer.RunnerTests',
   );

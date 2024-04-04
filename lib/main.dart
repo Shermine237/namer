@@ -1,20 +1,21 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:namer/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
 import 'login.dart';
 import 'meteo.dart';
 import 'generator.dart';
 import 'favorite.dart';
 import 'folder.dart';
+import 'todo.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
-);
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -28,8 +29,11 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Namer App',
         theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: Colors.blue,
+          ).copyWith(
+            secondary: Colors.blueAccent,
+          ),
         ),
         home: const MyHomePage(),
       ),
@@ -38,13 +42,17 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+  late WordPair current;
+  List<WordPair> favorites = [];
+
+  MyAppState() {
+    current = WordPair.random();
+  }
+
   void getNext() {
     current = WordPair.random();
     notifyListeners();
   }
-
-  var favorites = <WordPair>[];
 
   void toggleFavorite() {
     if (favorites.contains(current)) {
@@ -55,8 +63,6 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 }
-
-// ...
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -87,8 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
       case 4:
         page = const FolderPage();
         break;
+      case 5:
+        page = const ToDoPage();
+        break;
       default:
-        throw UnimplementedError('no widget for $selectedIndex');
+        throw UnimplementedError('No widget for $selectedIndex');
     }
 
     return LayoutBuilder(
@@ -120,25 +129,29 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: Icon(Icons.folder),
                       label: Text('Fichiers'),
                     ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.checklist),
+                      label: Text('To Do'),
+                    ),
                   ],
-                  selectedIndex: selectedIndex, 
+                  selectedIndex: selectedIndex,
                   onDestinationSelected: (value) {
-                  setState(() {
-                    selectedIndex = value;
-                  });
+                    setState(() {
+                      selectedIndex = value;
+                    });
                   },
                 ),
               ),
               Expanded(
                 child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: Theme.of(context).colorScheme.primary,
                   child: page,
                 ),
               ),
             ],
           ),
         );
-      }
+      },
     );
   }
 }

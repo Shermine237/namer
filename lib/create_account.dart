@@ -5,7 +5,7 @@ import 'auth_service.dart';
 import 'main.dart';
 
 class CreateAccount extends StatefulWidget {
-  const CreateAccount({Key? key}) : super(key: key);
+  const CreateAccount({super.key});
 
   @override
   _CreateAccountState createState() => _CreateAccountState();

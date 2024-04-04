@@ -63,7 +63,7 @@ class GeneratorPage extends StatelessWidget {
 class SecondRoute extends StatelessWidget {
   final WordPair wordPair;
 
-  const SecondRoute({Key? key, required this.wordPair}) : super(key: key);
+  const SecondRoute({super.key, required this.wordPair});
   
   @override
   Widget build(BuildContext context) {

@@ -5,6 +5,8 @@ import 'package:path/path.dart' as path;
 import 'package:file_picker/file_picker.dart' as file_picker;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
+
 
 class FolderPage extends StatefulWidget {
   const FolderPage({super.key});
@@ -16,17 +18,18 @@ class FolderPage extends StatefulWidget {
 class _FolderPageState extends State<FolderPage> {
   List<firebase_storage.Reference> _files = [];
   List<bool> _selectedItems = [];
+  ProgressDialog? _progressDialog;
+  late firebase_storage.Reference storageRef;
 
   @override
   void initState() {
     super.initState();
+    storageRef = firebase_storage.FirebaseStorage.instance.ref('Public');
     _listFiles();
   }
 
   Future<void> _listFiles() async {
     try {
-      firebase_storage.Reference storageRef =
-          firebase_storage.FirebaseStorage.instance.ref('Public');
       firebase_storage.ListResult result = await storageRef.listAll();
       setState(() {
         _files = result.items;
@@ -41,11 +44,13 @@ class _FolderPageState extends State<FolderPage> {
 
   Future<void> _uploadFile() async {
     try {
-      final filePickerResult = await file_picker.FilePicker.platform.pickFiles(type: file_picker.FileType.any);
+      final filePickerResult = await file_picker.FilePicker.platform.pickFiles(
+          type: file_picker.FileType.any);
       if (filePickerResult != null) {
         final fileBytes = filePickerResult.files.single.bytes;
         final fileName = filePickerResult.files.single.name;
-        final firebase_storage.Reference storageRef = firebase_storage.FirebaseStorage.instance.ref('Public/$fileName');
+        final firebase_storage.Reference storageRef =
+            firebase_storage.FirebaseStorage.instance.ref('Public/$fileName');
         await storageRef.putData(fileBytes!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fichier téléversé avec succès !')),
@@ -65,7 +70,7 @@ class _FolderPageState extends State<FolderPage> {
     });
   }
 
-  void _deleteSelected() async {
+  Future<void> _deleteSelected() async {
     try {
       List<firebase_storage.Reference> selectedFiles = _selectedItems
           .asMap()
@@ -125,7 +130,11 @@ class _FolderPageState extends State<FolderPage> {
           .map((entry) => _files[entry.key])
           .toList();
 
-      for (var fileRef in selectedFiles) {
+      _progressDialog = ProgressDialog(context);
+      _progressDialog!.style(message: 'Téléchargement en cours...');
+      await _progressDialog!.show();
+
+      final futures = selectedFiles.map((fileRef) async {
         final String downloadUrl = await fileRef.getDownloadURL();
         final String fileName = path.basename(fileRef.fullPath);
         final HttpClientRequest request = await HttpClient().getUrl(Uri.parse(downloadUrl));
@@ -135,12 +144,16 @@ class _FolderPageState extends State<FolderPage> {
         final String filePath = path.join(appDocumentsDirectory.path, fileName);
         final File file = File(filePath);
         await file.writeAsBytes(bytes);
-      }
+      });
+
+      await Future.wait(futures);
+      await _progressDialog!.hide();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fichiers téléchargés avec succès !')),
       );
-    } catch (e){
+    } catch (e) {
+      await _progressDialog!.hide();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Échec du téléchargement des fichiers : $e')),
       );
