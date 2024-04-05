@@ -1,4 +1,4 @@
-package com.example.namer
+package com.shermine.app
 
 import io.flutter.embedding.android.FlutterActivity
 
