@@ -20,6 +20,7 @@ class _FolderPageState extends State<FolderPage> {
   List<bool> _selectedItems = [];
   ProgressDialog? _progressDialog;
   late firebase_storage.Reference storageRef;
+  bool _isListingFiles = false;
 
   @override
   void initState() {
@@ -29,7 +30,15 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   Future<void> _listFiles() async {
+    if (_isListingFiles) {
+      return;
+    }
+
     try {
+      setState(() {
+        _isListingFiles = true;
+      });
+
       firebase_storage.ListResult result = await storageRef.listAll();
       setState(() {
         _files = result.items;
@@ -39,6 +48,10 @@ class _FolderPageState extends State<FolderPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Une erreur est survenue : $e')),
       );
+    } finally {
+      setState(() {
+        _isListingFiles = false;
+      });
     }
   }
 
