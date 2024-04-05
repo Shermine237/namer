@@ -14,10 +14,10 @@ class ToDoPage extends StatefulWidget {
   const ToDoPage({super.key});
 
   @override
-  _ToDoPageState createState() => _ToDoPageState();
+  ToDoPageState createState() => ToDoPageState();
 }
 
-class _ToDoPageState extends State<ToDoPage> {
+class ToDoPageState extends State<ToDoPage> {
   late DatabaseReference _tasksRef;
   late final List<Task> _tasks = [];
   late List<Task> _selectedTasks;
@@ -50,19 +50,21 @@ class _ToDoPageState extends State<ToDoPage> {
     }
   }
 
-  Future<void> _addTask(Task task) async {
+  Future<void> _addTask(BuildContext context, Task task) async {
     try {
       await _tasksRef.push().set({
         "title": task.title,
         "body": task.body,
       });
     } on FirebaseException catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Échec de l'ajout de la tâche : ${e.message}"))
+        SnackBar(content: Text("Échec de l'ajout de la tâche : ${e.message}")),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Échec de l'ajout de la tâche : $e"))
+        SnackBar(content: Text("Échec de l'ajout de la tâche : $e")),
       );
     }
   }
@@ -194,7 +196,8 @@ class _ToDoPageState extends State<ToDoPage> {
               controller: _taskNameController,
               onSubmitted: (taskTitle) {
                 if (taskTitle.isNotEmpty) {
-                  _addTask(Task(taskTitle, "Pas de description"));
+                  if (!context.mounted) return;
+                  _addTask(context, Task(taskTitle, "Pas de description"));
                   _taskNameController.clear();
                 }
               },
@@ -227,7 +230,8 @@ class _ToDoPageState extends State<ToDoPage> {
                               TextButton(
                                 child: const Text('Ajouter'),
                                 onPressed: () {
-                                  _addTask(Task(taskTitle, enteredText));
+                                  if (!context.mounted) return;
+                                  _addTask(context, Task(taskTitle, enteredText));
                                   Navigator.of(context).pop();
                                 },
                               ),

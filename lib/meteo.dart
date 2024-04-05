@@ -8,10 +8,10 @@ class MeteoPage extends StatefulWidget {
   const MeteoPage({super.key});
 
   @override
-  _WeatherPageState createState() => _WeatherPageState();
+  WeatherPageState createState() => WeatherPageState();
 }
 
-class _WeatherPageState extends State<MeteoPage> {
+class WeatherPageState extends State<MeteoPage> {
   final _formKey = GlobalKey<FormState>();
 
   String _cityName = '';
@@ -50,7 +50,7 @@ class _WeatherPageState extends State<MeteoPage> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
-                    _fetchWeatherData();
+                    _fetchWeatherData(context);
                   }
                 },
                 child: const Text('Afficher Meteo'),
@@ -74,7 +74,7 @@ class _WeatherPageState extends State<MeteoPage> {
     );
   }
 
-  Future<void> _fetchWeatherData() async {
+  Future<void> _fetchWeatherData(BuildContext context) async {
     setState(() {
       _isLoading = true;
     });
@@ -92,6 +92,7 @@ class _WeatherPageState extends State<MeteoPage> {
           _weatherData = weatherData;
         });
       } else {
+        if (!context.mounted) return;
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -109,6 +110,7 @@ class _WeatherPageState extends State<MeteoPage> {
         );
       }
     } catch (error) {
+      if (!context.mounted) return;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(

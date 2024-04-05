@@ -12,10 +12,10 @@ class FolderPage extends StatefulWidget {
   const FolderPage({super.key});
 
   @override
-  _FolderPageState createState() => _FolderPageState();
+  FolderPageState createState() => FolderPageState();
 }
 
-class _FolderPageState extends State<FolderPage> {
+class FolderPageState extends State<FolderPage> {
   List<firebase_storage.Reference> _files = [];
   List<bool> _selectedItems = [];
   ProgressDialog? _progressDialog;
@@ -26,10 +26,10 @@ class _FolderPageState extends State<FolderPage> {
   void initState() {
     super.initState();
     storageRef = firebase_storage.FirebaseStorage.instance.ref('Public');
-    _listFiles();
+    _listFiles(context);
   }
 
-  Future<void> _listFiles() async {
+  Future<void> _listFiles(BuildContext context) async {
     if (_isListingFiles) {
       return;
     }
@@ -45,6 +45,7 @@ class _FolderPageState extends State<FolderPage> {
         _selectedItems = List.generate(result.items.length, (index) => false);
       });
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Une erreur est survenue : $e')),
       );
@@ -55,7 +56,7 @@ class _FolderPageState extends State<FolderPage> {
     }
   }
 
-  Future<void> _uploadFile() async {
+  Future<void> _uploadFile(BuildContext context) async {
     try {
       final filePickerResult = await file_picker.FilePicker.platform.pickFiles(
           type: file_picker.FileType.any);
@@ -65,12 +66,14 @@ class _FolderPageState extends State<FolderPage> {
         final firebase_storage.Reference storageRef =
             firebase_storage.FirebaseStorage.instance.ref('Public/$fileName');
         await storageRef.putData(fileBytes!);
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fichier téléversé avec succès !')),
         );
-        _listFiles();
+        _listFiles(context);
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Échec du téléversement du fichier : $e')),
       );
@@ -83,7 +86,7 @@ class _FolderPageState extends State<FolderPage> {
     });
   }
 
-  Future<void> _deleteSelected() async {
+  Future<void> _deleteSelected(BuildContext context) async {
     try {
       List<firebase_storage.Reference> selectedFiles = _selectedItems
           .asMap()
@@ -121,20 +124,22 @@ class _FolderPageState extends State<FolderPage> {
           await fileRef.delete();
         }
 
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fichiers supprimés avec succès !')),
         );
 
-        _listFiles();
+        _listFiles(context);
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Échec de la suppression des fichiers : $e')),
       );
     }
   }
 
-  Future<void> _downloadSelected() async {
+  Future<void> _downloadSelected(BuildContext context) async {
     try {
       List<firebase_storage.Reference> selectedFiles = _selectedItems
           .asMap()
@@ -162,11 +167,13 @@ class _FolderPageState extends State<FolderPage> {
       await Future.wait(futures);
       await _progressDialog!.hide();
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fichiers téléchargés avec succès !')),
       );
     } catch (e) {
       await _progressDialog!.hide();
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Échec du téléchargement des fichiers : $e')),
       );
@@ -197,17 +204,17 @@ class _FolderPageState extends State<FolderPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: _uploadFile,
+            onPressed: () => _uploadFile(context),
             child: const Icon(Icons.upload),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
-            onPressed: _deleteSelected,
+            onPressed: () => _deleteSelected(context),
             child: const Icon(Icons.delete),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
-            onPressed: _downloadSelected,
+            onPressed: () => _downloadSelected(context),
             child: const Icon(Icons.download),
           ),
         ],
